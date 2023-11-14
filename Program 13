@@ -1,0 +1,162 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+#define MEMORY_SIZE 1000
+#define MAX_PROCESSES 100
+
+int memory[MEMORY_SIZE];
+int processes[MAX_PROCESSES];
+int num_processes = 0;
+
+// Initialize the memory block with zeros (empty)
+void initialize_memory() {
+    for (int i = 0; i < MEMORY_SIZE; i++) {
+        memory[i] = 0;
+    }
+}
+
+// First Fit Memory Allocation
+int first_fit(int process_size) {
+    for (int i = 0; i < MEMORY_SIZE; i++) {
+        int block_size = 0;
+        while (i < MEMORY_SIZE && memory[i] == 0) {
+            block_size++;
+            i++;
+            if (block_size >= process_size) {
+                return i - process_size;
+            }
+        }
+    }
+    return -1;  // No suitable block found
+}
+
+// Best Fit Memory Allocation
+int best_fit(int process_size) {
+    int best_fit_block = -1;
+    int best_fit_size = MEMORY_SIZE;
+
+    for (int i = 0; i < MEMORY_SIZE; i++) {
+        int block_size = 0;
+        while (i < MEMORY_SIZE && memory[i] == 0) {
+            block_size++;
+            i++;
+        }
+
+        if (block_size >= process_size && block_size < best_fit_size) {
+            best_fit_block = i - block_size;
+            best_fit_size = block_size;
+        }
+    }
+
+    return best_fit_block;
+}
+
+// Worst Fit Memory Allocation
+int worst_fit(int process_size) {
+    int worst_fit_block = -1;
+    int worst_fit_size = 0;
+
+    for (int i = 0; i < MEMORY_SIZE; i++) {
+        int block_size = 0;
+        while (i < MEMORY_SIZE && memory[i] == 0) {
+            block_size++;
+            i++;
+        }
+
+        if (block_size >= process_size && block_size > worst_fit_size) {
+            worst_fit_block = i - block_size;
+            worst_fit_size = block_size;
+        }
+    }
+
+    return worst_fit_block;
+}
+
+// Allocate memory for a process using a given allocation strategy
+int allocate_memory(int process_size, int (*allocation_strategy)(int)) {
+    int block_start = allocation_strategy(process_size);
+    if (block_start != -1) {
+        for (int i = block_start; i < block_start + process_size; i++) {
+            memory[i] = 1;
+        }
+        processes[num_processes++] = block_start;
+        return block_start;
+    } else {
+        return -1;  // Allocation failed
+    }
+}
+
+// Deallocate memory for a process
+void deallocate_memory(int block_start, int process_size) {
+    for (int i = block_start; i < block_start + process_size; i++) {
+        memory[i] = 0;
+    }
+}
+
+int main() {
+    initialize_memory();
+
+    while (1) {
+        printf("Choose an option:\n");
+        printf("1. Allocate Memory (First Fit)\n");
+        printf("2. Allocate Memory (Best Fit)\n");
+        printf("3. Allocate Memory (Worst Fit)\n");
+        printf("4. Deallocate Memory\n");
+        printf("5. Exit\n");
+
+        int choice;
+        scanf("%d", &choice);
+
+        if (choice == 5) {
+            break;
+        }
+
+        if (choice < 1 || choice > 5) {
+            printf("Invalid choice. Try again.\n");
+            continue;
+        }
+
+        if (choice == 1 || choice == 2 || choice == 3) {
+            int process_size;
+            printf("Enter process size: ");
+            scanf("%d", &process_size);
+
+            int block_start;
+            if (choice == 1) {
+                block_start = allocate_memory(process_size, first_fit);
+            } else if (choice == 2) {
+                block_start = allocate_memory(process_size, best_fit);
+            } else {
+                block_start = allocate_memory(process_size, worst_fit);
+            }
+
+            if (block_start != -1) {
+                printf("Memory allocated successfully. Block starts at %d\n", block_start);
+            } else {
+                printf("Memory allocation failed. Insufficient space.\n");
+            }
+        } else if (choice == 4) {
+            int block_start;
+            printf("Enter block start: ");
+            scanf("%d", &block_start);
+
+            int process_size = 0;
+            for (int i = 0; i < num_processes; i++) {
+                if (processes[i] == block_start) {
+                    process_size = block_start - processes[i];
+                    processes[i] = -1;  // Mark as deallocated
+                    break;
+                }
+            }
+
+            if (process_size > 0) {
+                deallocate_memory(block_start, process_size);
+                printf("Memory deallocated successfully.\n");
+            } else {
+                printf("Invalid block start or process not found.\n");
+            }
+        }
+    }
+
+    return 0;
+}
