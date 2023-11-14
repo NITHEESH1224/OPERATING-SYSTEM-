@@ -1,0 +1,69 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+#define MAX_RECORDS 100
+
+// Structure to represent a record
+struct Record {
+    int recordNumber;
+    char data[100]; // Assume a data field of 100 characters for simplicity
+};
+
+// Function to write a record to the file
+void writeRecord(struct Record file[], int *fileSize, char newData[]) {
+    if (*fileSize < MAX_RECORDS) {
+        file[*fileSize].recordNumber = *fileSize + 1;
+        snprintf(file[*fileSize].data, sizeof(file[*fileSize].data), "%s", newData);
+        (*fileSize)++;
+        printf("Record written successfully.\n");
+    } else {
+        printf("File is full. Cannot write more records.\n");
+    }
+}
+
+// Function to read all records from the file
+void readRecords(struct Record file[], int fileSize) {
+    if (fileSize > 0) {
+        printf("Reading all records from the file:\n");
+        for (int i = 0; i < fileSize; ++i) {
+            printf("Record %d: %s\n", file[i].recordNumber, file[i].data);
+        }
+    } else {
+        printf("File is empty. No records to read.\n");
+    }
+}
+
+int main() {
+    struct Record file[MAX_RECORDS];
+    int fileSize = 0;
+    int choice;
+    char newData[100];
+
+    printf("Sequential File Allocation Simulation\n");
+
+    do {
+        printf("\n1. Write a Record\n");
+        printf("2. Read All Records\n");
+        printf("0. Exit\n");
+        printf("Enter your choice: ");
+        scanf("%d", &choice);
+
+        switch (choice) {
+            case 1:
+                printf("Enter data for the new record: ");
+                scanf("%s", newData);
+                writeRecord(file, &fileSize, newData);
+                break;
+            case 2:
+                readRecords(file, fileSize);
+                break;
+            case 0:
+                printf("Exiting...\n");
+                break;
+            default:
+                printf("Invalid choice. Please try again.\n");
+        }
+    } while (choice != 0);
+
+    return 0;
+}
