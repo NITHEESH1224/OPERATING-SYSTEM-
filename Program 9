@@ -1,0 +1,54 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+#include <sys/ipc.h>
+#include <sys/shm.h>
+
+#define SHM_KEY 1234  // An arbitrary key to identify the shared memory segment
+#define SHM_SIZE 1024  // Size of the shared memory segment
+
+int main() {
+    int shmid;        // Shared memory segment ID
+    char *shared_memory; // Pointer to the shared data
+
+    // Create a shared memory segment
+    shmid = shmget(SHM_KEY, SHM_SIZE, IPC_CREAT | 0666);
+    if (shmid == -1) {
+        perror("shmget");
+        exit(1);
+    }
+
+    // Attach the shared memory segment to the current process
+    shared_memory = shmat(shmid, NULL, 0);
+    if (shared_memory == (char *)(-1)) {
+        perror("shmat");
+        exit(1);
+    }
+
+    // Fork a child process
+    pid_t pid = fork();
+
+    if (pid < 0) {
+        perror("fork");
+        exit(1);
+    }
+
+    if (pid == 0) {
+        // Child process (Consumer)
+        sleep(1); // Sleep to allow the parent to write to shared memory
+        printf("Consumer Process: Data read from shared memory: %s\n", shared_memory);
+    } else {
+        // Parent process (Producer)
+        char data[] = "Hello, Shared Memory!";
+        strcpy(shared_memory, data); // Write data to the shared memory
+        printf("Producer Process: Wrote data to shared memory\n");
+        wait(NULL); // Wait for the child to finish
+    }
+
+    // Detach and remove the shared memory segment
+    shmdt(shared_memory);
+    shmctl(shmid, IPC_RMID, NULL);
+
+    return 0;
+}
