@@ -1,0 +1,55 @@
+#include <stdio.h>
+
+#define MAX_BLOCKS 100
+
+// Structure to represent a memory block
+struct MemoryBlock {
+    int size;
+    int allocated;  // 0 for unallocated, 1 for allocated
+};
+
+// Function to allocate memory using Best Fit algorithm
+void bestFit(int blockSize[], int m, int processSize[], int n) {
+    // Array to store memory blocks
+    struct MemoryBlock memory[MAX_BLOCKS];
+
+    // Initialize memory blocks
+    for (int i = 0; i < m; i++) {
+        memory[i].size = blockSize[i];
+        memory[i].allocated = 0;  // Mark all blocks as unallocated
+    }
+
+    // Allocate memory for each process
+    for (int i = 0; i < n; i++) {
+        int bestFitIndex = -1;
+
+        // Find the best fit block for the current process
+        for (int j = 0; j < m; j++) {
+            if (memory[j].size >= processSize[i] && memory[j].allocated == 0) {
+                if (bestFitIndex == -1 || memory[j].size < memory[bestFitIndex].size) {
+                    bestFitIndex = j;
+                }
+            }
+        }
+
+        // Allocate the memory block to the current process
+        if (bestFitIndex != -1) {
+            memory[bestFitIndex].allocated = 1;
+            printf("Process %d allocated to Memory Block %d\n", i + 1, bestFitIndex + 1);
+        } else {
+            printf("Process %d cannot be allocated\n", i + 1);
+        }
+    }
+}
+
+int main() {
+    int blockSize[] = {100, 500, 200, 300, 600};
+    int processSize[] = {212, 417, 112, 426};
+    int m = sizeof(blockSize) / sizeof(blockSize[0]);
+    int n = sizeof(processSize) / sizeof(processSize[0]);
+
+    printf("Memory Allocation using Best Fit Algorithm:\n");
+    bestFit(blockSize, m, processSize, n);
+
+    return 0;
+}
